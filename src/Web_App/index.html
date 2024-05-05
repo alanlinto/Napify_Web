@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <title>Login</title>
+</head>
+
+<body>
+    <center>
+        <div class="container">
+            <h2>Login Form</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="text" class="form-control" id="email" name="email" placeholder="Enter your email"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" class="form-control" id="password" name="password"
+                        placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+            <a href="register.html">Register Now!</a>
+            <div id="loginMessage"></div>
+        </div>
+    </center>
+    <script>
+        $(document).ready(function () {
+            $("#loginForm").submit(function (event) {
+                event.preventDefault(); // Prevent form submission
+
+                var email = $("#email").val();
+                var password = $("#password").val();
+
+                $("#loginMessage").empty();
+
+                $.ajax({
+                    url: "https://vm0fj7rmyb.execute-api.us-east-1.amazonaws.com/Production/lambda_function",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        email: email,
+                        password: password,
+                        request_type: "login"
+                    }),
+                    success: function (response) {
+                        if (response.statusCode === 200) {
+                            // Redirect to main page
+                            localStorage.setItem('username', response.param1);
+                            localStorage.setItem('email', response.param2);
+                            window.location.href = "main.html";
+                        } else {
+                            $("#loginMessage").text(response.body);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        $("#loginMessage").text("Error: " + errorThrown);
+                    }
+                });
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>

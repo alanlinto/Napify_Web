@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <title>Main</title>
+</head>
+
+<body>
+
+    <h1>
+        <center>
+            Welcome to Napify
+        </center>
+    </h1>
+    <hr>
+    <center>
+        <div id="User">
+            <h2>
+                Profile
+            </h2>
+            <p id="getUsername"></p>
+        </div>
+    </center>
+    <hr>
+    <center>
+        <div id="Subscriptions">
+            <h2>
+                Subscriptions
+            </h2>
+            <div id="subsMessage"></div>
+            <table id="subscribedTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Artist</th>
+                        <th>Year</th>
+                        <th>Image</th>
+                    </tr>
+                </thead>
+                <tbody id="subscriptionTableBody"></tbody>
+            </table>
+        </div>
+    </center>
+</body>
+<hr>
+<center>
+    <div id="Query">
+        <h2>
+            Query
+        </h2>
+        <form id="queryForm">
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Enter song title">
+            </div>
+            <div class="form-group">
+                <label for="artist">Artist:</label>
+                <input type="text" class="form-control" id="artist" name="artist" placeholder="Enter artist name">
+            </div>
+            <div class="form-group">
+                <label for="year">Year:</label>
+                <input type="text" class="form-control" id="year" name="year" placeholder="Enter release year">
+            </div>
+            <button type="submit" class="btn btn-primary">Query</button>
+        </form>
+        <div id="queryMessage"></div>
+        <table id="songTable">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Year</th>
+                    <th>Image</th>
+                </tr>
+            </thead>
+            <tbody id="songTableBody"></tbody>
+        </table>
+    </div>
+</center>
+<hr>
+<center>
+    </ceneter><button onclick="page_redirect()">Logout</button>
+</center>
+
+<script>
+
+    document.getElementById('getUsername').innerHTML = 'Logged in as  ..... <strong>' + localStorage.getItem('username') + '</strong>';
+
+    function page_redirect() {
+        window.location.replace("index.html");
+    }
+    function populateTable(data) {
+
+        var tableBody = document.getElementById('songTableBody');
+        tableBody.innerHTML = '';
+
+        data.forEach(function (song) {
+            var row = document.createElement('tr');
+            row.innerHTML = '<td>' + song.Title + '</td><td>' + song.Artist + '</td><td>' + song.Year + '</td><td>' + '<img src= ' + song.Image + ' width="50" height="50"></img></td>' +
+                '<td><button class="subsBtn" data-title="' + song.Title + '">Subscribe</button></td>';
+            tableBody.appendChild(row);
+            console.log(song.Image);
+        });
+    }
+
+
+    function fillTable(data) {
+
+        var tableBody = document.getElementById('subscriptionTableBody');
+        tableBody.innerHTML = '';
+
+        data.forEach(function (song) {
+            var row = document.createElement('tr');
+            row.innerHTML = '<td>' + song.Title + '</td><td>' + song.Artist + '</td><td>' + song.Year + '</td><td>' + '<img src= ' + song.Image + ' width="50" height="50"></img></td>' +
+                '<td><button class="cancelBtn" data-title="' + song.Title + '">Remove</button></td>';
+            tableBody.appendChild(row);
+            //console.log(song.Image);
+        });
+    }
+
+    function music_operation(title, artist, year, cmd) {
+        $.ajax({
+            url: "https://86m1gksegb.execute-api.us-east-1.amazonaws.com/Stager/fetch_function",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                email: localStorage.getItem('email'),
+                title: title,
+                artist: artist,
+                year: year,
+                request_type: cmd
+
+            }),
+            success: function (response) {
+                alert(response.body);
+                refresh_page();
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                $("#queryMessage").text("Error: " + errorThrown);
+            }
+        });
+    }
+
+    function refresh_page() {
+        var email = localStorage.getItem('email');
+        $("#subscriptionTableBody").empty();
+        $("#subsMessage").empty();
+        $.ajax({
+            url: "https://86m1gksegb.execute-api.us-east-1.amazonaws.com/Stager/fetch_function",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                email: email,
+                request_type: "subs_query"
+
+            }),
+            success: function (response) {
+                if (response.statusCode == 600) {
+
+                    //console.log(response.body);
+                    fillTable(response.body);
+                }
+                else {
+                    $("#subsMessage").text(response.body);
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                $("#subsMessage").text("Error: " + errorThrown);
+            }
+        });
+    }
+    //console.log(localStorage.getItem('email'));
+    $(document).ready(function () {
+
+        $(document).on('click', '.subsBtn', function () {
+
+            var title = $(this).data('title');
+            var artist = $(this).closest('tr').find('td:eq(1)').text();
+            var year = $(this).closest('tr').find('td:eq(2)').text();
+
+            // Display the title and artist values
+            console.log("Title:", title);
+            console.log("Artist:", artist);
+            console.log('Year:', year);
+
+            music_operation(title, artist, year, "music_subscribe");
+        });
+
+        $(document).on('click', '.cancelBtn', function () {
+
+            var title = $(this).data('title');
+            var artist = $(this).closest('tr').find('td:eq(1)').text();
+            var year = $(this).closest('tr').find('td:eq(2)').text();
+
+            // Display the title and artist values
+            console.log("Title:", title);
+            console.log("Artist:", artist);
+            console.log('Year:', year);
+
+            music_operation(title, artist, year, "music_unsubscribe");
+        });
+
+        $("#queryForm").submit(function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            var title = $("#title").val();
+            var artist = $("#artist").val();
+            var year = $("#year").val();
+
+            $("#songTableBody").empty();
+            $("#queryMessage").empty();
+
+            $.ajax({
+                url: "https://86m1gksegb.execute-api.us-east-1.amazonaws.com/Stager/fetch_function",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({
+                    title: title,
+                    artist: artist,
+                    year: year,
+                    request_type: "music_query"
+
+                }),
+                success: function (response) {
+                    if (response.statusCode == 500) {
+                        populateTable(response.body);
+                    }
+                    else {
+                        $("#queryMessage").text(response.body[0]);
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    $("#queryMessage").text("Error: " + errorThrown);
+                }
+            });
+        });
+    });
+
+    refresh_page();
+
+</script>
+
+</body>
+
+</html>

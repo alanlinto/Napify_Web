@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <title>Registeration Form</title>
+</head>
+
+<body>
+    <center>
+        <div class="container">
+            <h2>Register Account</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="text" class="form-control" id="email" name="email" placeholder="Enter your email"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" class="form-control" id="username" name="username"
+                        placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" class="form-control" id="password" name="password"
+                        placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
+            <div id="loginMessage"></div>
+        </div>
+    </center>
+    <script>
+        $(document).ready(function () {
+            $("#loginForm").submit(function (event) {
+                event.preventDefault(); // Prevent form submission
+
+                var email = $("#email").val();
+                var username = $("#username").val();
+                var password = $("#password").val();
+
+                $.ajax({
+                    url: "https://vm0fj7rmyb.execute-api.us-east-1.amazonaws.com/Production/lambda_function",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        email: email,
+                        username: username,
+                        password: password,
+                        request_type: "register"
+                    }),
+                    success: function (response) {
+                        if (response.statusCode === 300) {
+                            alert("User Register Successfully");
+                            window.location.href = "index.html";
+                        } else {
+                            $("#loginMessage").text(response.body);
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        $("#loginMessage").text("Error: " + errorThrown);
+                    }
+                });
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>
